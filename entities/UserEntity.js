@@ -1,17 +1,17 @@
 import mongoose from "mongoose";
+import News from './NewsEntity.js';
 
 const userSchema = new mongoose.Schema({
     ip: {
         type: String,
         required: true,
         unique: true,
-        length: 15
+        maxlength: 15
     },
     username: {
         type: String,
         required: true,
-        unique: true,
-        length: 32
+        maxlength: 32
     },
     lastOnline: {
         type: Date,
@@ -19,5 +19,25 @@ const userSchema = new mongoose.Schema({
         default: Date.now
     }
 }, { timestamps: true });
+
+userSchema.pre('findOneAndDelete', async function(next) {
+    const userId = this.getQuery()._id;
+
+    try {
+        await News.updateMany(
+            {},
+            {
+                $pull: {
+                    comments: { user: userId },
+                    likes: { user: userId },
+                }
+            }
+        );
+
+        next();
+    } catch (error) {
+        next(error);
+    }
+});
 
 export default mongoose.model('User', userSchema);
