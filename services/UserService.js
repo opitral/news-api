@@ -12,7 +12,7 @@ class UserService {
 
     async getByIp(ip) {
         const foundUser = await UserEntity.findOne({ip: ip}, "-__v", undefined);
-        if (!foundUser.ip) {
+        if (!foundUser) {
             throw new Error('User not found');
         }
         return foundUser;
