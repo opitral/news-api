@@ -11,8 +11,8 @@ class UserService {
     }
 
     async getByIp(ip) {
-        const foundUser = UserEntity.findOne({ip: ip}, "-__v", undefined);
-        if (!foundUser) {
+        const foundUser = await UserEntity.findOne({ip: ip}, "-__v", undefined);
+        if (!foundUser.ip) {
             throw new Error('User not found');
         }
         return foundUser;
@@ -75,11 +75,11 @@ class UserService {
     }
 
     async getUserByIpElseCreate(ip) {
-        const foundUser = await this.getUserByIp(ip);
-        if (!foundUser) {
+        try {
+            return await this.getUserByIp(ip);
+        } catch (error) {
             return this.createUser(ip);
         }
-        return foundUser;
     }
 
     async getUserRole(ip) {
@@ -101,8 +101,10 @@ class UserService {
 
     formatUser(user) {
         return {
+            id: user._id,
             ip: user.ip,
             username: user.username,
+            role: user.role,
             lastOnline: user.lastOnline,
             createdAt: user.createdAt
         };
