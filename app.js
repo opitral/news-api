@@ -4,6 +4,8 @@ import cors from "cors";
 import dotenv from 'dotenv';
 
 import NewsController from './controllers/NewsController.js';
+import UserController from './controllers/UserController.js';
+
 import UserService from "./services/UserService.js";
 
 dotenv.config();
@@ -12,6 +14,7 @@ const userService = new UserService();
 mongoose.connect(process.env.DB_URL)
     .then(() => {
         console.log("Connected to database");
+        initializeAdminUsers().then(() => console.log("Admin users initialized"));
     })
     .catch((error) => {
         console.error(`Error connecting to the database: ${error}`);
@@ -20,9 +23,27 @@ mongoose.connect(process.env.DB_URL)
 const app = express();
 const port = process.env.PORT || 8080;
 
+async function initializeAdminUsers() {
+    console.log("Initialize admin users");
+    try {
+        const allowedIps = process.env.ALLOWED_IPS?.split(',');
+        if (allowedIps) {
+            for (const ip of allowedIps) {
+                const ip_trimmed = ip.trim();
+                await userService.getUserByIpElseCreate(ip_trimmed);
+                await userService.setUserRole(ip_trimmed, "admin");
+            }
+        }
+    } catch (error) {
+        console.error(`Error initializing admin users: ${error}`);
+    }
+}
+
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+app.use("/api/users", UserController);
 
 app.use(async (req, _, next) => {
     try {
