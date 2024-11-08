@@ -10,7 +10,11 @@ class UserService {
     }
 
     async getByIp(ip) {
-        return UserEntity.findOne({ip: ip}, "-__v", undefined).lean();
+        const foundUser = UserEntity.findOne({ip: ip}, "-__v", undefined);
+        if (!foundUser) {
+            throw new Error('User not found');
+        }
+        return foundUser;
     }
 
     async create(user) {
