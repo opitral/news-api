@@ -4,22 +4,22 @@ const newsSchema = new mongoose.Schema({
     title: {
         type: String,
         required: true,
-        length: 128
+        maxlength: 128
     },
     content: {
         type: String,
         required: true,
-        length: 1024
+        maxlength: 1024
     },
     image: {
         type: String,
         required: false,
-        length: 256
+        maxlength: 256
     },
     video: {
         type: String,
         required: false,
-        length: 256
+        maxlength: 256
     },
     likes: [
         {
@@ -45,7 +45,7 @@ const newsSchema = new mongoose.Schema({
             content: {
                 type: String,
                 required: true,
-                length: 1024
+                maxlength: 1024
             },
             date: {
                 type: Date,
