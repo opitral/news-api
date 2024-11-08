@@ -1,7 +1,7 @@
 import Router from "express";
 import {validationResult} from "express-validator";
 import NewsService from "../services/NewsService.js";
-import { newsCreateValidator, commentCreateValidator } from "../validations/NewsValidation.js";
+import { newsCreateValidator, newsUpdateValidator, commentCreateValidator } from "../validations/NewsValidation.js";
 import UserService from "../services/UserService.js";
 
 const router = new Router();
@@ -11,9 +11,6 @@ const newsService = new NewsService();
 
 router.get("/", async (req, res) => {
     try {
-        const user = await userService.getUserByIpElseCreate(req.ip);
-        await userService.updateUserLastOnline(user.ip);
-
         const offset = parseInt(req.query.offset);
         const limit = parseInt(req.query.limit);
         const news = await newsService.getAllNews(offset, limit);
@@ -21,6 +18,7 @@ router.get("/", async (req, res) => {
             "news": news
         });
     } catch (error) {
+        console.error(error);
         res.status(400).json({
             "error": error.message
         });
@@ -29,18 +27,15 @@ router.get("/", async (req, res) => {
 
 router.get("/:id", async (req, res) => {
     try {
-        const user = await userService.getUserByIpElseCreate(req.ip);
-        await userService.updateUserLastOnline(user.ip);
-
-        await newsService.viewNews(req.params.id, user.ip);
+        await newsService.viewNews(req.params.id, req.ip);
         const news = await newsService.getNewsById(req.params.id);
         res.json({
             "news": news
         });
     } catch (error) {
-        console.log(error);
+        console.error(error);
         res.status(404).json({
-            "error": "News not found"
+            "error": error.message
         });
     }
 });
@@ -65,13 +60,14 @@ router.post("/", newsCreateValidator, async (req, res) => {
             "id": news.id
         });
     } catch (error) {
+        console.error(error);
         res.status(400).json({
             "error": error.message
         });
     }
 });
 
-router.put("/", newsCreateValidator, async (req, res) => {
+router.put("/", newsUpdateValidator, async (req, res) => {
     if (await userService.isUserAdmin(req.ip) === false) {
         return res.status(403).json({
             "error": "Forbidden"
@@ -86,11 +82,12 @@ router.put("/", newsCreateValidator, async (req, res) => {
     }
 
     try {
-        const result = await newsService.updateNews(req.body);
+        await newsService.updateNews(req.body);
         res.json({
-            "id": result.id
+            "result": true
         });
     } catch (error) {
+        console.error(error);
         res.status(400).json({
             "error": error.message
         });
@@ -104,24 +101,26 @@ router.delete("/:id", async (req, res) => {
         });
     }
     try {
-        const result = await newsService.deleteNews(req.params.id);
+        await newsService.deleteNews(req.params.id);
         res.json({
-            "result": result
+            "result": true
         });
     } catch (error) {
+        console.error(error);
         res.status(404).json({
-            "error": "News not found"
+            "error": error.message
         });
     }
 });
 
 router.post("/:id/like", async (req, res) => {
     try {
-        const result = await newsService.likeNews(req.params.id, req.ip);
+        await newsService.likeNews(req.params.id, req.ip);
         res.json({
-            "result": result
+            "result": true
         });
     } catch (error) {
+        console.error(error);
         res.status(400).json({
             "error": error.message
         });
@@ -130,11 +129,12 @@ router.post("/:id/like", async (req, res) => {
 
 router.post("/:id/unlike", async (req, res) => {
     try {
-        const result = await newsService.unlikeNews(req.params.id, req.ip);
+        await newsService.unlikeNews(req.params.id, req.ip);
         res.json({
-            "result": result
+            "result": true
         });
     } catch (error) {
+        console.error(error);
         res.status(400).json({
             "error": error.message
         });
@@ -143,12 +143,27 @@ router.post("/:id/unlike", async (req, res) => {
 
 router.post("/:id/comment", commentCreateValidator, async (req, res) => {
     try {
-        const result = await newsService.commentNews(req.params.id,req.ip, req.body.comment);
+        await newsService.commentNews(req.params.id, req.ip, req.body.content);
         res.json({
-            "result": result
+            "result": true
         });
     } catch (error) {
+        console.error(error);
         res.status(400).json({
+            "error": error.message
+        });
+    }
+});
+
+router.delete("/:id/comment/:commentId", async (req, res) => {
+    try {
+        await newsService.deleteCommentNews(req.params.id, req.ip, req.params.commentId);
+        res.json({
+            "result": true
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(404).json({
             "error": error.message
         });
     }
