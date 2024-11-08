@@ -6,6 +6,7 @@ class UserService {
         return UserEntity.find(undefined, "-__v", undefined)
             .skip(offset)
             .limit(limit)
+            .sort({ createdAt: -1 })
             .lean();
     }
 
@@ -50,7 +51,8 @@ class UserService {
     }
 
     async getUserByIp(ip) {
-        return this.getByIp(ip);
+        const foundUser = await this.getByIp(ip);
+        return this.formatUser(foundUser);
     }
 
     async createUser(ip) {
@@ -97,13 +99,18 @@ class UserService {
         return role === 'admin';
     }
 
+    formatUser(user) {
+        return {
+            ip: user.ip,
+            username: user.username,
+            lastOnline: user.lastOnline,
+            createdAt: user.createdAt
+        };
+    }
+
     formatUsers(users) {
         return users.map(user => {
-            return {
-                ip: user.ip,
-                username: user.username,
-                lastOnline: user.lastOnline
-            };
+            return this.formatUser(user);
         });
     }
 }
