@@ -10,11 +10,7 @@ class UserService {
     }
 
     async getByIp(ip) {
-        const user = await UserEntity.findOne({ip: ip}, "-__v", undefined).lean();
-        if (!user) {
-            throw new Error('User not found');
-        }
-        return user;
+        return UserEntity.findOne({ip: ip}, "-__v", undefined).lean();
     }
 
     async create(user) {
@@ -25,7 +21,8 @@ class UserService {
         const foundUser = await this.getByIp(user.ip);
         const userId = foundUser._id;
         const updatedUser = await UserEntity.findByIdAndUpdate(userId, {$set: {
-            ...user
+            ...user,
+            ip: undefined
         }}, undefined);
         if (!updatedUser) {
             throw new Error('User not found');
@@ -69,6 +66,31 @@ class UserService {
 
     async deleteUser(ip) {
         return this.delete(ip);
+    }
+
+    async getUserByIpElseCreate(ip) {
+        const foundUser = await this.getUserByIp(ip);
+        if (!foundUser) {
+            return this.createUser(ip);
+        }
+        return foundUser;
+    }
+
+    async getUserRole(ip) {
+        const foundUser = await this.getUserByIp(ip);
+        return foundUser.role;
+    }
+
+    async setUserRole(ip, role) {
+        return this.update({
+            ip: ip,
+            role: role
+        });
+    }
+
+    async isUserAdmin(ip) {
+        const role = await this.getUserRole(ip);
+        return role === 'admin';
     }
 
     formatUsers(users) {
