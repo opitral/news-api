@@ -1,5 +1,4 @@
 import mongoose from "mongoose";
-import News from './NewsEntity.js';
 
 const userSchema = new mongoose.Schema({
     ip: {
@@ -25,25 +24,5 @@ const userSchema = new mongoose.Schema({
         enum: ['user', 'admin']
     }
 }, { timestamps: true });
-
-userSchema.pre('findOneAndDelete', async function(next) {
-    const userId = this.getQuery()._id;
-
-    try {
-        await News.updateMany(
-            {},
-            {
-                $pull: {
-                    comments: { user: userId },
-                    likes: { user: userId },
-                }
-            }
-        );
-
-        next();
-    } catch (error) {
-        next(error);
-    }
-});
 
 export default mongoose.model('User', userSchema);
