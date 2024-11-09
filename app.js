@@ -27,12 +27,15 @@ async function initializeAdminUsers() {
     console.log("Initialize admin users");
     try {
         const allowedIps = process.env.ALLOWED_IPS?.split(',');
-        if (allowedIps) {
+        if (allowedIps && typeof allowedIps.length) {
             for (const ip of allowedIps) {
                 const ip_trimmed = ip.trim();
                 await userService.getUserByIpElseCreate(ip_trimmed);
                 await userService.setUserRole(ip_trimmed, "admin");
             }
+        } else {
+            await userService.getUserByIpElseCreate(allowedIps);
+            await userService.setUserRole(allowedIps, "admin");
         }
     } catch (error) {
         console.error(`Error initializing admin users: ${error}`);
@@ -42,8 +45,6 @@ async function initializeAdminUsers() {
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-
-app.use("/api/users", UserController);
 
 app.use(async (req, _, next) => {
     try {
@@ -56,6 +57,7 @@ app.use(async (req, _, next) => {
 });
 
 app.use("/api/news", NewsController);
+app.use("/api/users", UserController);
 
 app.listen(port, (error) => {
     if (error) {
