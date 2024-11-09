@@ -1,0 +1,33 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    container_name: express-app
+    ports:
+      - "8080:8080"
+    environment:
+      - PORT=8080
+      - DB_URL=mongodb://mongo:27017/news-db
+      - ALLOWED_IPS=::ffff:172.18.0.1
+    depends_on:
+      - mongo
+    networks:
+      - app-network
+
+  mongo:
+    image: mongo:latest
+    container_name: mongo-db
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  mongo-data:
