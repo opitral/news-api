@@ -25,6 +25,20 @@ router.get("/", async (req, res) => {
     }
 });
 
+router.get("/top", async (req, res) => {
+    try {
+        const news = await newsService.getTopTodayNews();
+        res.json({
+            "news": news
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(400).json({
+            "error": error.message
+        });
+    }
+});
+
 router.get("/:id", async (req, res) => {
     try {
         await newsService.viewNews(req.params.id, req.userIp);

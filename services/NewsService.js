@@ -161,6 +161,29 @@ class NewsService {
         return news.likes.some((like) => like.user.toString() === user.id.toString());
     }
 
+    async getTopTodayNews() {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const tomorrow = new Date(today);
+        tomorrow.setDate(tomorrow.getDate() + 1);
+
+        const allNews = await this.getAll(0, 100);
+
+        const newsWithTodayViews = allNews.map(news => {
+            const todayViews = news.views.filter(view =>
+                view.date >= today && view.date < tomorrow
+            );
+            return {
+                ...news,
+                todayViewsCount: todayViews.length
+            };
+        });
+
+        const sortedNews = newsWithTodayViews.sort((a, b) => b.todayViewsCount - a.todayViewsCount);
+        const topNews = sortedNews.slice(0, 5);
+        return this.formatNews(topNews);
+    }
+
     truncateText(text, maxLength) {
         if (text.length > maxLength) {
             return text.slice(0, maxLength) + "...";
