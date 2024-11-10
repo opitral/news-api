@@ -14,9 +14,6 @@ router.get("/", async (req, res) => {
         const offset = parseInt(req.query.offset);
         const limit = parseInt(req.query.limit);
         const news = await newsService.getAllNews(offset, limit);
-        for (let i = 0; i < news.length; i++) {
-            news[i].isLiked = !!(await newsService.isNewsLikedByUser(news[i].id, req.userIp));
-        }
         res.json({
             "news": news
         });

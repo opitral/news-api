@@ -97,11 +97,11 @@ class UserService {
     }
 
     async getUserByIpElseCreate(ip) {
-        try {
-            return await UserEntity.findOne({ ip: ip }, "-__v", undefined);
-        } catch (error) {
-            return this.createUser(ip);
+        let user = await UserEntity.findOne({ ip: ip }, "-__v", undefined);
+        if (!user) {
+            user = this.createUser(ip);
         }
+        return user;
     }
 
     async getUserRole(id) {

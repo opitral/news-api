@@ -27,16 +27,10 @@ async function initializeAdminUsers() {
     console.log("Initialize admin users");
     try {
         const allowedIps = process.env.ALLOWED_IPS?.split(',');
-        if (allowedIps && typeof allowedIps.length) {
-            for (const ip of allowedIps) {
-                const ip_trimmed = ip.trim();
-                await userService.getUserByIpElseCreate(ip_trimmed);
-                const user = await userService.getUserByIp(ip_trimmed);
-                await userService.setUserRole(user.id, "admin");
-            }
-        } else {
-            await userService.getUserByIpElseCreate(allowedIps);
-            const user = await userService.getUserByIp(allowedIps);
+        for (const ip of allowedIps) {
+            const ip_trimmed = ip.trim();
+            await userService.getUserByIpElseCreate(ip_trimmed);
+            const user = await userService.getUserByIp(ip_trimmed);
             await userService.setUserRole(user.id, "admin");
         }
     } catch (error) {
