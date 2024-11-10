@@ -14,6 +14,9 @@ router.get("/", async (req, res) => {
         const offset = parseInt(req.query.offset);
         const limit = parseInt(req.query.limit);
         const news = await newsService.getAllNews(offset, limit);
+        for (let i = 0; i < news.length; i++) {
+            news[i].isLiked = !!(await newsService.isNewsLikedByUser(news[i].id, req.userIp));
+        }
         res.json({
             "news": news
         });
@@ -27,8 +30,9 @@ router.get("/", async (req, res) => {
 
 router.get("/:id", async (req, res) => {
     try {
-        await newsService.viewNews(req.params.id, req.ip);
+        await newsService.viewNews(req.params.id, req.userIp);
         const news = await newsService.getNewsById(req.params.id);
+        news.isLiked = !!(await newsService.isNewsLikedByUser(req.params.id, req.userIp));
         res.json({
             "news": news
         });
@@ -47,7 +51,7 @@ router.get("/:id", async (req, res) => {
 });
 
 router.post("/", newsCreateValidator, async (req, res) => {
-    if (await userService.isUserAdmin(req.ip) === false) {
+    if (await userService.isUserAdmin(req.userIp) === false) {
         return res.status(403).json({
             "error": "Forbidden"
         });
@@ -74,7 +78,7 @@ router.post("/", newsCreateValidator, async (req, res) => {
 });
 
 router.put("/", newsUpdateValidator, async (req, res) => {
-    if (await userService.isUserAdmin(req.ip) === false) {
+    if (await userService.isUserAdmin(req.userIp) === false) {
         return res.status(403).json({
             "error": "Forbidden"
         });
@@ -101,7 +105,7 @@ router.put("/", newsUpdateValidator, async (req, res) => {
 });
 
 router.delete("/:id", async (req, res) => {
-    if (await userService.isUserAdmin(req.ip) === false) {
+    if (await userService.isUserAdmin(req.userIp) === false) {
         return res.status(403).json({
             "error": "Forbidden"
         });
@@ -121,7 +125,7 @@ router.delete("/:id", async (req, res) => {
 
 router.post("/:id/like", async (req, res) => {
     try {
-        await newsService.likeNews(req.params.id, req.ip);
+        await newsService.likeNews(req.params.id, req.userIp);
         res.json({
             "result": true
         });
@@ -135,7 +139,7 @@ router.post("/:id/like", async (req, res) => {
 
 router.post("/:id/unlike", async (req, res) => {
     try {
-        await newsService.unlikeNews(req.params.id, req.ip);
+        await newsService.unlikeNews(req.params.id, req.userIp);
         res.json({
             "result": true
         });
@@ -149,7 +153,7 @@ router.post("/:id/unlike", async (req, res) => {
 
 router.post("/:id/comment", commentCreateValidator, async (req, res) => {
     try {
-        await newsService.commentNews(req.params.id, req.ip, req.body.content);
+        await newsService.commentNews(req.params.id, req.userIp, req.body.content);
         res.json({
             "result": true
         });
@@ -163,7 +167,7 @@ router.post("/:id/comment", commentCreateValidator, async (req, res) => {
 
 router.delete("/:id/comment/:commentId", async (req, res) => {
     try {
-        await newsService.deleteCommentNews(req.params.id, req.ip, req.params.commentId);
+        await newsService.deleteCommentNews(req.params.id, req.userIp, req.params.commentId);
         res.json({
             "result": true
         });

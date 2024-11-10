@@ -7,7 +7,7 @@ const userService = new UserService();
 
 router.get("/", async (req, res) => {
     try {
-        if (await userService.isUserAdmin(req.ip) === false) {
+        if (await userService.isUserAdmin(req.userIp) === false) {
             return res.status(403).json({
                 "error": "Forbidden"
             });
@@ -27,15 +27,15 @@ router.get("/", async (req, res) => {
     }
 });
 
-router.get("/:ip", async (req, res) => {
+router.get("/:id", async (req, res) => {
     try {
-        if (await userService.isUserAdmin(req.ip) === false) {
+        if (await userService.isUserAdmin(req.userIp) === false) {
             return res.status(403).json({
                 "error": "Forbidden"
             });
         }
 
-        const user = await userService.getUserByIp(req.params.id);
+        const user = await userService.getUserById(req.params.id);
         res.json({
             "user": user
         });
@@ -55,7 +55,7 @@ router.get("/:ip", async (req, res) => {
 
 router.post("/", async (req, res) => {
     try {
-        if (await userService.isUserAdmin(req.ip) === false) {
+        if (await userService.isUserAdmin(req.userIp) === false) {
             return res.status(403).json({
                 "error": "Forbidden"
             });
@@ -74,7 +74,7 @@ router.post("/", async (req, res) => {
 
 router.put("/", async (req, res) => {
     try {
-        if (await userService.isUserAdmin(req.ip) === false) {
+        if (await userService.isUserAdmin(req.userIp) === false) {
             return res.status(403).json({
                 "error": "Forbidden"
             });
@@ -93,7 +93,7 @@ router.put("/", async (req, res) => {
 
 router.delete("/:id", async (req, res) => {
     try {
-        if (await userService.isUserAdmin(req.ip) === false) {
+        if (await userService.isUserAdmin(req.userIp) === false) {
             return res.status(403).json({
                 "error": "Forbidden"
             });
