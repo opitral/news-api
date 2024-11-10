@@ -20,6 +20,9 @@ class NewsService {
         }
         const newsId = new mongoose.Types.ObjectId(id);
         const news = await NewsEntity.findById(newsId, "-__v", undefined);
+        news?.comments.sort((a, b) => {
+            return b.date - a.date;
+        });
         if (!news) {
             throw new Error('News not found');
         }
@@ -151,6 +154,13 @@ class NewsService {
         return news.save();
     }
 
+    async isNewsLikedByUser(newsId, userIp) {
+        const news = await this.getById(newsId);
+        const user = await this.userService.getUserByIp(userIp);
+
+        return news.likes.some((like) => like.user.toString() === user.id.toString());
+    }
+
     truncateText(text, maxLength) {
         if (text.length > maxLength) {
             return text.slice(0, maxLength) + "...";
@@ -175,7 +185,7 @@ class NewsService {
                     date: comment.date
                 };
                 }),
-            createdAt: news.createdAt,
+            createdAt: news.createdAt
     }};
 
     formatNews(news) {

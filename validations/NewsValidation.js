@@ -9,7 +9,7 @@ export const newsCreateValidator = [
     body("content", "Content must be from 8 to 1024 characters")
         .isLength({
             min: 8,
-            max: 1024
+            max: 8192
         }),
     body("image", "Image url must be from 8 to 256 characters")
         .optional()
@@ -40,7 +40,7 @@ export const newsUpdateValidator = [
         .optional()
         .isLength({
             min: 8,
-            max: 1024
+            max: 8192
         }),
     body("image", "Image url must be from 8 to 256 characters")
         .optional()
