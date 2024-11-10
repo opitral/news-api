@@ -1,5 +1,6 @@
 import UserEntity from "../entities/UserEntity.js";
 import { faker } from '@faker-js/faker';
+import mongoose from "mongoose";
 
 class UserService {
     async getAll(offset, limit) {
@@ -8,6 +9,18 @@ class UserService {
             .limit(limit)
             .sort({ createdAt: -1 })
             .lean();
+    }
+
+    async getById(id) {
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            throw new Error('Invalid user ID');
+        }
+        const userId = new mongoose.Types.ObjectId(id);
+        const foundUser = await UserEntity.findById(userId, "-__v", undefined);
+        if (!foundUser) {
+            throw new Error('User not found');
+        }
+        return foundUser;
     }
 
     async getByIp(ip) {
@@ -23,8 +36,10 @@ class UserService {
     }
 
     async update(user) {
-        const foundUser = await this.getByIp(user.ip);
-        const userId = foundUser._id;
+        if (!mongoose.Types.ObjectId.isValid(user.id)) {
+            throw new Error('Invalid user ID');
+        }
+        const userId = new mongoose.Types.ObjectId(user.id);
         const updatedUser = await UserEntity.findByIdAndUpdate(userId, {$set: {
             ...user,
             ip: undefined
@@ -35,9 +50,11 @@ class UserService {
         return updatedUser;
     }
 
-    async delete(ip) {
-        const foundUser = await this.getByIp(ip);
-        const userId = foundUser._id;
+    async delete(id) {
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            throw new Error('Invalid user ID');
+        }
+        const userId = new mongoose.Types.ObjectId(id);
         const deletedUser = await UserEntity.findByIdAndDelete(userId, undefined);
         if (!deletedUser) {
             throw new Error('User not found');
@@ -48,6 +65,11 @@ class UserService {
     async getAllUsers(offset = 0, limit = 20) {
         const foundUsers = await this.getAll(offset, limit);
         return this.formatUsers(foundUsers);
+    }
+
+    async getUserById(id) {
+        const foundUser = await this.getById(id);
+        return this.formatUser(foundUser);
     }
 
     async getUserByIp(ip) {
@@ -63,39 +85,40 @@ class UserService {
         });
     }
 
-    async updateUserLastOnline(ip) {
+    async updateUserLastOnline(id) {
         return this.update({
-            ip: ip,
+            id: id,
             lastOnline: Date.now()
         });
     }
 
-    async deleteUser(ip) {
-        return this.delete(ip);
+    async deleteUser(id) {
+        return this.delete(id);
     }
 
     async getUserByIpElseCreate(ip) {
         try {
-            return await this.getUserByIp(ip);
+            return await UserEntity.findOne({ ip: ip }, "-__v", undefined);
         } catch (error) {
             return this.createUser(ip);
         }
     }
 
-    async getUserRole(ip) {
-        const foundUser = await this.getUserByIp(ip);
+    async getUserRole(id) {
+        const foundUser = await this.getUserById(id);
         return foundUser.role;
     }
 
-    async setUserRole(ip, role) {
+    async setUserRole(id, role) {
         return this.update({
-            ip: ip,
+            id: id,
             role: role
         });
     }
 
     async isUserAdmin(ip) {
-        const role = await this.getUserRole(ip);
+        const user = await this.getUserByIp(ip);
+        const role = await this.getUserRole(user.id);
         return role === 'admin';
     }
 

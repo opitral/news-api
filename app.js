@@ -31,11 +31,13 @@ async function initializeAdminUsers() {
             for (const ip of allowedIps) {
                 const ip_trimmed = ip.trim();
                 await userService.getUserByIpElseCreate(ip_trimmed);
-                await userService.setUserRole(ip_trimmed, "admin");
+                const user = await userService.getUserByIp(ip_trimmed);
+                await userService.setUserRole(user.id, "admin");
             }
         } else {
             await userService.getUserByIpElseCreate(allowedIps);
-            await userService.setUserRole(allowedIps, "admin");
+            const user = await userService.getUserByIp(allowedIps);
+            await userService.setUserRole(user.id, "admin");
         }
     } catch (error) {
         console.error(`Error initializing admin users: ${error}`);
@@ -46,13 +48,27 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+
+
 app.use(async (req, _, next) => {
     try {
-        await userService.getUserByIpElseCreate(req.ip);
-        await userService.updateUserLastOnline(req.ip);
+        req.userIp = req.headers['x-forwarded-for'] || req.ip;
+        await userService.getUserByIpElseCreate(req.userIp);
+        const user = await userService.getUserByIp(req.userIp);
+        await userService.updateUserLastOnline(user.id);
     } catch (error) {
         console.error(`Error in user IP handling middleware: ${error}`);
     }
+    next();
+});
+
+app.use((req,res,next) => {
+    const ip = `Request from IP: ${req.userIp}`;
+    const method = `Method: ${req.method}`;
+    const path = `Path: ${req.path}`;
+    const date = `Date: ${new Date().toLocaleString()}`;
+    const separator = "-----------------------------------";
+    console.log(`${ip}\n${method}\n${path}\n${date}\n${separator}`);
     next();
 });
 
