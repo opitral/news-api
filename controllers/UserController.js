@@ -7,9 +7,9 @@ const userService = new UserService();
 
 router.get("/", async (req, res) => {
     try {
-        if (await userService.isUserAdmin(req.userIp) === false) {
+        if (req.isNotAdmin()) {
             return res.status(403).json({
-                "error": "Forbidden"
+                "error": "user not authorized to get all users"
             });
         }
 
@@ -29,9 +29,9 @@ router.get("/", async (req, res) => {
 
 router.get("/:id", async (req, res) => {
     try {
-        if (await userService.isUserAdmin(req.userIp) === false) {
+        if (req.isNotAdmin()) {
             return res.status(403).json({
-                "error": "Forbidden"
+                "error": "user not authorized to get user by id"
             });
         }
 
@@ -55,9 +55,9 @@ router.get("/:id", async (req, res) => {
 
 router.post("/", async (req, res) => {
     try {
-        if (await userService.isUserAdmin(req.userIp) === false) {
+        if (req.isNotAdmin()) {
             return res.status(403).json({
-                "error": "Forbidden"
+                "error": "user not authorized to create user"
             });
         }
         const user = await userService.createUser(req.body.ip);
@@ -74,9 +74,9 @@ router.post("/", async (req, res) => {
 
 router.put("/", async (req, res) => {
     try {
-        if (await userService.isUserAdmin(req.userIp) === false) {
+        if (req.isNotAdmin()) {
             return res.status(403).json({
-                "error": "Forbidden"
+                "error": "user not authorized to update user"
             });
         }
         await userService.update(req.body);
@@ -93,9 +93,9 @@ router.put("/", async (req, res) => {
 
 router.delete("/:id", async (req, res) => {
     try {
-        if (await userService.isUserAdmin(req.userIp) === false) {
+        if (req.isNotAdmin()) {
             return res.status(403).json({
-                "error": "Forbidden"
+                "error": "user not authorized to delete user"
             });
         }
         await userService.deleteUser(req.params.id);
