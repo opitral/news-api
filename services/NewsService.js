@@ -18,14 +18,27 @@ class NewsService {
         if (!mongoose.Types.ObjectId.isValid(id)) {
             throw new Error('Invalid news ID');
         }
+
         const newsId = new mongoose.Types.ObjectId(id);
-        const news = await NewsEntity.findById(newsId, "-__v", undefined);
-        news?.comments.sort((a, b) => {
-            return b.date - a.date;
-        });
+        const news = await NewsEntity.findById(newsId, "-__v");
+
         if (!news) {
             throw new Error('News not found');
         }
+
+        const validComments = [];
+        for (const comment of news.comments) {
+            try {
+                const user = await this.userService.getById(comment.user);
+                if (user) validComments.push(comment); // Only include comments with valid users
+            } catch (error) {
+                console.error(`User not found for comment ID: ${comment._id}`, error);
+            }
+        }
+
+        validComments.sort((a, b) => b.date - a.date);
+        news.comments = validComments;
+
         return news;
     }
 
