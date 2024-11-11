@@ -124,7 +124,7 @@ class NewsService {
         return news.save();
     }
 
-    async viewNews(newsId, userIp) {
+    async createViewNews(newsId, userIp) {
         const news = await this.getById(newsId);
         const user = await this.userService.getUserByIp(userIp);
 
@@ -138,7 +138,7 @@ class NewsService {
         }
     }
 
-    async commentNews(newsId, userIp, comment) {
+    async createCommentNews(newsId, userIp, comment) {
         const news = await this.getById(newsId);
         const user = await this.userService.getUserByIp(userIp);
 
@@ -150,19 +150,20 @@ class NewsService {
         return news.save();
     }
 
-    async deleteCommentNews(newsId, userIp, commentId) {
+    async getCommentNews(newsId, commentId) {
         const news = await this.getById(newsId);
-
+        if (!news) {
+            throw new Error('News not found');
+        }
         const comment = news.comments.find((comment) => comment._id.toString() === commentId);
         if (!comment) {
             throw new Error('Comment not found');
         }
+        return comment;
+    }
 
-        const isAdmin = await this.userService.isUserAdmin(userIp);
-        if (comment.user.ip !== userIp && !isAdmin) {
-            throw new Error('User not authorized to delete comment');
-        }
-
+    async deleteCommentNews(newsId, commentId) {
+        const news = await this.getById(newsId);
         news.comments = news.comments.filter((comment) => comment._id.toString() !== commentId);
         return news.save();
     }
@@ -174,7 +175,7 @@ class NewsService {
         return news.likes.some((like) => like.user.toString() === user.id.toString());
     }
 
-    async getTopTodayNews() {
+    async getTodayTopNews() {
         const today = new Date();
         today.setHours(0, 0, 0, 0);
         const tomorrow = new Date(today);

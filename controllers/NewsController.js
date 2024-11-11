@@ -27,7 +27,7 @@ router.get("/", async (req, res) => {
 
 router.get("/top", async (req, res) => {
     try {
-        const news = await newsService.getTopTodayNews();
+        const news = await newsService.getTodayTopNews();
         res.json({
             "news": news
         });
@@ -41,7 +41,7 @@ router.get("/top", async (req, res) => {
 
 router.get("/:id", async (req, res) => {
     try {
-        await newsService.viewNews(req.params.id, req.userIp);
+        await newsService.createViewNews(req.params.id, req.userIp);
         const news = await newsService.getNewsById(req.params.id);
         news.isLiked = !!(await newsService.isNewsLikedByUser(req.params.id, req.userIp));
         for (const comment of news.comments) {
@@ -66,9 +66,9 @@ router.get("/:id", async (req, res) => {
 });
 
 router.post("/", newsCreateValidator, async (req, res) => {
-    if (await userService.isUserAdmin(req.userIp) === false) {
+    if (req.isNotAdmin()) {
         return res.status(403).json({
-            "error": "Forbidden"
+            "error": "user not authorized to create news"
         });
     }
 
@@ -93,9 +93,9 @@ router.post("/", newsCreateValidator, async (req, res) => {
 });
 
 router.put("/", newsUpdateValidator, async (req, res) => {
-    if (await userService.isUserAdmin(req.userIp) === false) {
+    if (req.isNotAdmin()) {
         return res.status(403).json({
-            "error": "Forbidden"
+            "error": "user not authorized to update news"
         });
     }
 
@@ -120,9 +120,9 @@ router.put("/", newsUpdateValidator, async (req, res) => {
 });
 
 router.delete("/:id", async (req, res) => {
-    if (await userService.isUserAdmin(req.userIp) === false) {
+    if (req.isNotAdmin()) {
         return res.status(403).json({
-            "error": "Forbidden"
+            "error": "user not authorized to delete news"
         });
     }
     try {
@@ -182,7 +182,14 @@ router.post("/:id/comment", commentCreateValidator, async (req, res) => {
 
 router.delete("/:id/comment/:commentId", async (req, res) => {
     try {
-        await newsService.deleteCommentNews(req.params.id, req.userIp, req.params.commentId);
+        const comment = await newsService.getCommentNews(req.params.id, req.params.commentId);
+        const commentOwner = await userService.getUserById(comment.user);
+        if (commentOwner.ip !== req.userIp && req.isNotAdmin()) {
+            return res.status(403).json({
+                "error": "user not authorized to delete comment"
+            });
+        }
+        await newsService.deleteCommentNews(req.params.id, req.params.commentId);
         res.json({
             "result": true
         });
