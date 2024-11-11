@@ -97,11 +97,12 @@ class UserService {
     }
 
     async getUserByIpElseCreate(ip) {
-        let user = await this.getByIp(ip);
-        if (!user) {
-            user = this.createUser(ip);
+        try {
+            return await this.getByIp(ip);
+
+        } catch (error) {
+            return this.createUser(ip);
         }
-        return  this.formatUser(user);
     }
 
     async getUserRole(id) {

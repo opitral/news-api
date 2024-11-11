@@ -168,7 +168,7 @@ router.post("/:id/unlike", async (req, res) => {
 
 router.post("/:id/comment", commentCreateValidator, async (req, res) => {
     try {
-        await newsService.commentNews(req.params.id, req.userIp, req.body.content);
+        await newsService.createCommentNews(req.params.id, req.userIp, req.body.content);
         res.json({
             "result": true
         });

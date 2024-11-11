@@ -175,7 +175,7 @@ class NewsService {
         return news.likes.some((like) => like.user.toString() === user.id.toString());
     }
 
-    async getTodayTopNews() {
+    async getTodayTopNews(newsCount = 3) {
         const today = new Date();
         today.setHours(0, 0, 0, 0);
         const tomorrow = new Date(today);
@@ -194,7 +194,7 @@ class NewsService {
         });
 
         const sortedNews = newsWithTodayViews.sort((a, b) => b.todayViewsCount - a.todayViewsCount);
-        const topNews = sortedNews.slice(0, 5);
+        const topNews = sortedNews.slice(0, newsCount);
         return this.formatNews(topNews);
     }
 
