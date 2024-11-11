@@ -42,13 +42,13 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-
-
 app.use(async (req, _, next) => {
     try {
         req.userIp = req.headers['x-forwarded-for'] || req.ip;
-        await userService.getUserByIpElseCreate(req.userIp);
-        const user = await userService.getUserByIp(req.userIp);
+        const user = await userService.getUserByIpElseCreate(req.userIp);
+        req.userRole = await userService.getUserRole(user.id);
+        req.isAdmin = () => req.userRole === "admin";
+        req.isNotAdmin = () => req.userRole !== "admin";
         await userService.updateUserLastOnline(user.id);
     } catch (error) {
         console.error(`Error in user IP handling middleware: ${error}`);
@@ -57,12 +57,14 @@ app.use(async (req, _, next) => {
 });
 
 app.use((req,res,next) => {
-    const ip = `Request from IP: ${req.userIp}`;
+    const ip = `IP: ${req.userIp}`;
+    const role = `Role: ${req.userRole}`;
     const method = `Method: ${req.method}`;
     const path = `Path: ${req.path}`;
+    const body = `Body: ${JSON.stringify(req.body)}`;
     const date = `Date: ${new Date().toLocaleString()}`;
     const separator = "-----------------------------------";
-    console.log(`${ip}\n${method}\n${path}\n${date}\n${separator}`);
+    console.log(`${ip}\n${role}\n${method}\n${path}\n${body}\n${date}\n${separator}`);
     next();
 });
 
