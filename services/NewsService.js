@@ -30,7 +30,7 @@ class NewsService {
         for (const comment of news.comments) {
             try {
                 const user = await this.userService.getById(comment.user);
-                if (user) validComments.push(comment); // Only include comments with valid users
+                if (user) validComments.push(comment);
             } catch (error) {
                 console.error(`User not found for comment ID: ${comment._id}`, error);
             }

@@ -44,6 +44,10 @@ router.get("/:id", async (req, res) => {
         await newsService.viewNews(req.params.id, req.userIp);
         const news = await newsService.getNewsById(req.params.id);
         news.isLiked = !!(await newsService.isNewsLikedByUser(req.params.id, req.userIp));
+        for (const comment of news.comments) {
+            const commentOwner = await userService.getUserById(comment.user);
+            comment.isOwner = commentOwner.ip === req.userIp || await userService.isUserAdmin(req.userIp);
+        }
         res.json({
             "news": news
         });
